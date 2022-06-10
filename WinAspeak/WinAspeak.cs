@@ -78,7 +78,7 @@ namespace WinAspeak
                 MessageBox.Show("需要填写转换的文本!");
                 return;
             }
-       
+
             var select = new SelectVoices()
             {
                 ShortName = (string)comboBox2.SelectedValue,
@@ -86,7 +86,6 @@ namespace WinAspeak
                 Rate = trackBar2.Value,
                 Pitch = trackBar1.Value,
                 Text = textBox1.Text,
-                OutputFile = @"C:\Users\TXHZ-C021\Desktop\output.mp3"
             };
             var api = new AspeakApi();
             api.RunExternalExe("aspeak", select.ToString());
@@ -100,6 +99,44 @@ namespace WinAspeak
         /// <param name="e"></param>
         private void button2_Click(object sender, EventArgs e)
         {
+            if (string.IsNullOrEmpty((string)comboBox3.SelectedValue))
+            {
+                MessageBox.Show("正在初始化请稍等一会!");
+                return;
+            }
+            if (string.IsNullOrEmpty(textBox1.Text))
+            {
+                MessageBox.Show("需要填写转换的文本!");
+                return;
+            }
+
+            SaveFileDialog saveFileDialog1 = new SaveFileDialog();
+            saveFileDialog1.Filter = "音乐 Mp3|*.mp3";
+            saveFileDialog1.Title = "保存音频文件";
+            saveFileDialog1.ShowDialog();
+            if (saveFileDialog1.FileName != "")
+            {
+                var select = new SelectVoices()
+                {
+                    ShortName = (string)comboBox2.SelectedValue,
+                    Style = (string)comboBox1.SelectedValue,
+                    Rate = trackBar2.Value,
+                    Pitch = trackBar1.Value,
+                    Text = textBox1.Text,
+                    OutputFile = saveFileDialog1.FileName,
+                };
+                var api = new AspeakApi();
+                try
+                {
+                    api.RunExternalExe("aspeak", select.ToString());
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                    return;
+                }
+                MessageBox.Show("转换成功!");
+            }
 
         }
 
