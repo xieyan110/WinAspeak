@@ -10,14 +10,16 @@ namespace WinAspeak
         {
             InitializeComponent();
         }
-        private async void WinAspeak_Load(object sender, EventArgs e)
+        private void WinAspeak_Load(object sender, EventArgs e)
         {
-            var api = new AspeakApi();
-            voices = await api.GetVoicesList();
-            comboBox3.DataSource = voices.Select(x => x.Locale).Distinct().OrderByDescending(x => x.Contains("zh-")).ToList();
-            comboBox2.DataSource = voices.Where(x => x.Locale == (string)comboBox3.SelectedValue).Select(x => x.ShortName).ToList();
-            comboBox1.DataSource = voices.Where(x => x.ShortName == (string)comboBox2.SelectedValue).Select(x => x.StyleList).FirstOrDefault();
-
+            BeginInvoke(async () =>
+            {
+                var api = new AspeakApi();
+                voices = await api.GetVoicesList();
+                comboBox3.DataSource = voices.Select(x => x.Locale).Distinct().OrderByDescending(x => x.Contains("zh-")).ToList();
+                comboBox2.DataSource = voices.Where(x => x.Locale == (string)comboBox3.SelectedValue).Select(x => x.ShortName).ToList();
+                comboBox1.DataSource = voices.Where(x => x.ShortName == (string)comboBox2.SelectedValue).Select(x => x.StyleList).FirstOrDefault();
+            });
         }
 
         /// <summary>

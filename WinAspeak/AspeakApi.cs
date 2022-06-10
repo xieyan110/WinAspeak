@@ -21,21 +21,59 @@ namespace WinAspeak
 
         private static readonly HttpClient client = new HttpClient();
 
+        public readonly string jsonfile = "Voices.json";
         /// <summary>
-        /// 获取Voices 列表
+        /// 
         /// </summary>
         /// <returns></returns>
         public async Task<List<Voices>> GetVoicesList()
         {
+            if (File.Exists(jsonfile))
+            {
+                var jsonText = await ReadJson();
+                var repositories = JsonConvert.DeserializeObject<List<Voices>>(jsonText);
+
+                return repositories ?? new List<Voices>();
+            }
+            return await GetUrlVoicesList();
+        }
+
+        public async Task<string> ReadJson()
+        {
+
+            return await File.ReadAllTextAsync(jsonfile);
+        }
+
+
+        /// <summary>
+        /// 写入json
+        /// </summary>
+        /// <param name="jsonText"></param>
+        /// <returns></returns>
+        public async Task WriteJson(string jsonText)
+        {
+            await File.WriteAllTextAsync(jsonfile, jsonText);
+        }
+
+
+
+
+        /// <summary>
+        /// 获取Voices 列表
+        /// </summary>
+        /// <returns></returns>
+        public async Task<List<Voices>> GetUrlVoicesList()
+        {
             var (token, region) = await GetValueAsync();
 
             client.DefaultRequestHeaders.Accept.Clear();
-            client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36");
+
             client.DefaultRequestHeaders.Add("authorization", $"Bearer {token}");
 
             var streamTask = client.GetStringAsync($"https://{region}.tts.speech.microsoft.com/cognitiveservices/voices/list");
-            var a = await streamTask;
-            var repositories = JsonConvert.DeserializeObject<List<Voices>>(a);
+            var jsonText = await streamTask;
+            await WriteJson(jsonText);
+            var repositories = JsonConvert.DeserializeObject<List<Voices>>(jsonText);
 
             return repositories ?? new List<Voices>();
         }
