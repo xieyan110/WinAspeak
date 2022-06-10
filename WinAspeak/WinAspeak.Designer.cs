@@ -85,6 +85,7 @@
             this.textBox1.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.textBox1.Size = new System.Drawing.Size(352, 424);
             this.textBox1.TabIndex = 0;
+            this.textBox1.Text = "快来试一试，有趣的文字转语音功能吧！";
             // 
             // groupBox1
             // 
