@@ -43,8 +43,8 @@ namespace WinAspeak.models
             return
                 $"{(Text != null ? $" -t \"{Text}\" " : "")}" +
                 $"{(ShortName != null ? $" -v {ShortName} " : "")}" +
-                $" -p {Pitch / 0.5 * 0.01 + 1:0.00}" +
-                $" -r {(Rate * 0.01) + 1:0.00} " +
+                $" -p {Pitch * 0.01:0.00}" +
+                $" -r {Rate * 0.01:0.00} " +
                 $"{(Style != null ? $" -S {Style} " : "")}" +
                 $"{(OutputFile != null ? $" -o \"{OutputFile}\" " : "")}";
         }

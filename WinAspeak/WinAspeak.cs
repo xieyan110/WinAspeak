@@ -50,7 +50,7 @@ namespace WinAspeak
         /// <param name="e"></param>
         private void trackBar2_ValueChanged(object sender, EventArgs e)
         {
-            label6.Text = $"{(trackBar2.Value * 0.01) + 1:0.00}";
+            label6.Text = $"{(trackBar2.Value * 0.01):0.00}";
         }
 
         /// <summary>
@@ -60,7 +60,7 @@ namespace WinAspeak
         /// <param name="e"></param>
         private void trackBar1_ValueChanged(object sender, EventArgs e)
         {
-            label7.Text = $"{trackBar1.Value / 0.5 * 0.01 + 1:0.00}";
+            label7.Text = $"{trackBar1.Value * 0.01:0.00}";
         }
 
         /// <summary>
