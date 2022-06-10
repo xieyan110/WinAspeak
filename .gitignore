@@ -3,3 +3,5 @@
 ################################################################################
 
 /.vs
+/WinAspeak/bin/Debug/net6.0-windows
+/WinAspeak/obj/Debug/net6.0-windows
