@@ -99,7 +99,7 @@ namespace WinAspeak
                 MessageBox.Show(ex.Message);
                 return;
             }
-            MessageBox.Show("转换成功!");
+            //MessageBox.Show("转换成功!");
         }
 
         /// <summary>
