@@ -90,7 +90,15 @@ namespace WinAspeak
                 Text = textBox1.Text,
             };
             var api = new AspeakApi();
-            api.RunExternalExe("aspeak", select.ToString());
+            try
+            {
+                api.RunExternalExe("aspeak", select.ToString());
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+                return;
+            }
             MessageBox.Show("×ª»»³É¹¦!");
         }
 
