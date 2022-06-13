@@ -33,6 +33,8 @@ namespace WinAspeak
                 comboBox1.DataSource = voices.Where(x => x.ShortName == (string)comboBox2.SelectedValue).Select(x => x.StyleList).FirstOrDefault();
                 var jsonText = File.ReadAllText(JsonFile);
                 setInfo = JsonConvert.DeserializeObject<SetInfo>(jsonText);
+                try
+                {
                 await Task.Run(async () =>
                 {
                     #region SignalR
@@ -128,6 +130,10 @@ namespace WinAspeak
                     });
                     #endregion
                 });
+                }catch(HttpRequestException ex)
+                {
+
+                }
             });
 
         }
