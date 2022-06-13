@@ -4,6 +4,9 @@
     <_LastSelectedProfileId>D:\AAAAAAAAAAAAAAAA\C#_works\WinAspeak\WinAspeak\Properties\PublishProfiles\FolderProfile.pubxml</_LastSelectedProfileId>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Update="Setting .cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Update="WinAspeak.cs">
       <SubType>Form</SubType>
     </Compile>

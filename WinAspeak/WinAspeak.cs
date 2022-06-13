@@ -24,6 +24,11 @@ namespace WinAspeak
             });
         }
 
+
+
+
+        #region  ”Ô“Ù
+
         /// <summary>
         /// —°‘Ò”Ô—‘∫Û
         /// </summary>
@@ -165,7 +170,7 @@ namespace WinAspeak
                             MessageBox.Show(ex.Message);
                             return;
                         }
-                        
+
                     });
 
                 });
@@ -185,5 +190,23 @@ namespace WinAspeak
                 process?.Kill();
             });
         }
+
+        #endregion
+
+
+
+        #region
+        /// <summary>
+        /// …Ë÷√
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void toolStripButton1_Click(object sender, EventArgs e)
+        {
+            var set = new Setting();
+            set.ShowDialog();
+        }
+
+        #endregion
     }
 }
