@@ -202,18 +202,19 @@ namespace WinAspeak
                         Text = textBox1.Text,
                     };
                     var api = new AspeakApi();
-                    try
+                    Task.Run(() =>
                     {
-                        Task.Run(() =>
+                        try
                         {
                             api.RunExternalExe(ref process, "aspeak", select.ToString());
-                        });
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show(ex.Message);
-                        return;
-                    }
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show(ex.Message);
+                            return;
+                        }
+                    });
+
                 });
 
             });
@@ -258,19 +259,20 @@ namespace WinAspeak
                         OutputFile = saveFileDialog1.FileName,
                     };
                     var api = new AspeakApi();
-                    try
+                    await Task.Run(() =>
                     {
-                        await Task.Run(() =>
+                        try
                         {
                             api.RunExternalExe(ref process, "aspeak", select.ToString());
                             MessageBox.Show("×ª»»³É¹¦!");
-                        });
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show(ex.Message);
-                        return;
-                    }
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show(ex.Message);
+                            return;
+                        }
+
+                    });
                 });
             }
 
