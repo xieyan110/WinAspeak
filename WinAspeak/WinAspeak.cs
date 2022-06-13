@@ -1,5 +1,11 @@
+using Microsoft.AspNetCore.SignalR.Client;
+using Newtonsoft.Json;
 using System.Diagnostics;
+using System.Media;
+using System.Reactive.Subjects;
+using System.Reactive;
 using WinAspeak.models;
+using System.Reactive.Linq;
 
 namespace WinAspeak
 {
@@ -7,6 +13,10 @@ namespace WinAspeak
     {
         List<Voices>? voices { get; set; }
         public Process? process;
+        public readonly string JsonFile = "Setting.Json";
+        public HubConnection? connection;
+
+        public SetInfo? setInfo { get; set; }
 
         public WinAspeak()
         {
@@ -21,11 +31,96 @@ namespace WinAspeak
                 comboBox3.DataSource = voices.Select(x => x.Locale).Distinct().OrderByDescending(x => x.Contains("zh-")).ToList();
                 comboBox2.DataSource = voices.Where(x => x.Locale == (string)comboBox3.SelectedValue).Select(x => x.ShortName).ToList();
                 comboBox1.DataSource = voices.Where(x => x.ShortName == (string)comboBox2.SelectedValue).Select(x => x.StyleList).FirstOrDefault();
+                var jsonText = File.ReadAllText(JsonFile);
+                setInfo = JsonConvert.DeserializeObject<SetInfo>(jsonText);
+                await Task.Run(async () =>
+                {
+                    #region SignalR
+                    // http://localhost:5190/ChatHub
+                    connection = new HubConnectionBuilder()
+                     .WithUrl(setInfo?.ServerUrl ?? "")
+                     .WithAutomaticReconnect()
+                     .Build();
+                    var onMessage = new Subject<string>();
+                    // 初始化 SignalR
+
+                    connection.Closed += async (error) =>
+                    {
+                        await Task.Delay(new Random().Next(0, 5) * 1000);
+                        await connection.StartAsync();
+                    };
+
+                    // 开始
+                    await connection.StartAsync();
+
+                    // 监听
+                    connection.On<string>("CallMessageOK", (message) =>
+                    {
+                        onMessage.OnNext(message);
+                    });
+
+                    #endregion
+
+                    #region  RX
+
+                    var oldMessage = string.Empty;
+                    
+                    onMessage
+                    .Subscribe(message =>
+                    {
+                        if (oldMessage == message)
+                        {
+                            Task.Run(() =>
+                            {
+                                SoundPlayer player = new SoundPlayer();
+                                player.SoundLocation = @"output.wav";
+                                player.Load(); //同步加载声音
+                                player.Play(); //启用新线程播放
+                            });
+                            return;
+                        }
+
+                        oldMessage = message;
+                        var callMessage = string.Empty;
+                        foreach (var i in Enumerable.Range(1, setInfo?.CallNumber ?? 1))
+                            callMessage += message;
+
+                        BeginInvoke(() =>
+                        {
+                            var select = new SelectVoices()
+                            {
+                                ShortName = (string)comboBox2.SelectedValue,
+                                Style = (string)comboBox1.SelectedValue,
+                                Rate = trackBar2.Value,
+                                Pitch = trackBar1.Value,
+                                Text = callMessage,
+                                OutputFile = "output.wav",
+                            };
+                            var api = new AspeakApi();
+                            try
+                            {
+                                Task.Run(() =>
+                                {
+                                    api.RunExternalExe(ref process, "aspeak", select.ToString());
+                                    SoundPlayer player = new SoundPlayer();
+                                    player.SoundLocation = @"output.wav";
+                                    player.Load(); //同步加载声音
+                                    player.Play(); //启用新线程播放
+                                });
+                            }
+                            catch (Exception ex)
+                            {
+                                MessageBox.Show(ex.Message);
+                                return;
+                            }
+                        });
+
+                    });
+                    #endregion
+                });
             });
+
         }
-
-
-
 
         #region  语音
 
@@ -113,6 +208,7 @@ namespace WinAspeak
                         return;
                     }
                 });
+
             });
 
 
@@ -145,34 +241,29 @@ namespace WinAspeak
             {
                 Task.Run(async () =>
                 {
-                    BeginInvoke(async () =>
+                    var select = new SelectVoices()
                     {
-                        var select = new SelectVoices()
+                        ShortName = (string)comboBox2.SelectedValue,
+                        Style = (string)comboBox1.SelectedValue,
+                        Rate = trackBar2.Value,
+                        Pitch = trackBar1.Value,
+                        Text = textBox1.Text,
+                        OutputFile = saveFileDialog1.FileName,
+                    };
+                    var api = new AspeakApi();
+                    try
+                    {
+                        await Task.Run(() =>
                         {
-                            ShortName = (string)comboBox2.SelectedValue,
-                            Style = (string)comboBox1.SelectedValue,
-                            Rate = trackBar2.Value,
-                            Pitch = trackBar1.Value,
-                            Text = textBox1.Text,
-                            OutputFile = saveFileDialog1.FileName,
-                        };
-                        var api = new AspeakApi();
-                        try
-                        {
-                            await Task.Run(() =>
-                            {
-                                api.RunExternalExe(ref process, "aspeak", select.ToString());
-                                MessageBox.Show("转换成功!");
-                            });
-                        }
-                        catch (Exception ex)
-                        {
-                            MessageBox.Show(ex.Message);
-                            return;
-                        }
-
-                    });
-
+                            api.RunExternalExe(ref process, "aspeak", select.ToString());
+                            MessageBox.Show("转换成功!");
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(ex.Message);
+                        return;
+                    }
                 });
             }
 
@@ -194,8 +285,7 @@ namespace WinAspeak
         #endregion
 
 
-
-        #region
+        #region 设置
         /// <summary>
         /// 设置
         /// </summary>
@@ -208,5 +298,20 @@ namespace WinAspeak
         }
 
         #endregion
+
+
+        /// <summary>
+        /// 测试之后删除
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void toolStripButton2_Click(object sender, EventArgs e)
+        {
+            Task.Run(async () =>
+            {
+                if (connection != null)
+                    await connection.InvokeAsync("CallMessage", "请小明到4号房间检查就诊！");
+            });
+        }
     }
 }
