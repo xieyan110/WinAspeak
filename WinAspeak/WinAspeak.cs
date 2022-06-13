@@ -100,8 +100,7 @@ namespace WinAspeak
                                 OutputFile = "output.wav",
                             };
                             var api = new AspeakApi();
-
-                            try
+                            var action = () =>
                             {
                                 api.RunExternalExe(ref process, "aspeak", select.ToString());
                                 foreach (var i in Enumerable.Range(1, setInfo?.CallNumber ?? 1))
@@ -111,6 +110,10 @@ namespace WinAspeak
                                     player.Load(); //同步加载声音
                                     player.Play(); //启用新线程播放
                                 }
+                            };
+                            try
+                            {
+                                action.Invoke();
 
                             }
                             catch (Exception ex)
@@ -247,30 +250,35 @@ namespace WinAspeak
             saveFileDialog1.ShowDialog();
             if (saveFileDialog1.FileName != "")
             {
-                Task.Run(async () =>
+                Task.Run(() =>
                 {
-                    var select = new SelectVoices()
+                    BeginInvoke(async () =>
                     {
-                        ShortName = (string)comboBox2.SelectedValue,
-                        Style = (string)comboBox1.SelectedValue,
-                        Rate = trackBar2.Value,
-                        Pitch = trackBar1.Value,
-                        Text = textBox1.Text,
-                        OutputFile = saveFileDialog1.FileName,
-                    };
-                    var api = new AspeakApi();
-                    await Task.Run(() =>
-                    {
-                        try
+                        var select = new SelectVoices()
                         {
-                            api.RunExternalExe(ref process, "aspeak", select.ToString());
-                            MessageBox.Show("转换成功!");
-                        }
-                        catch (Exception ex)
+                            ShortName = (string)comboBox2.SelectedValue,
+                            Style = (string)comboBox1.SelectedValue,
+                            Rate = trackBar2.Value,
+                            Pitch = trackBar1.Value,
+                            Text = textBox1.Text,
+                            OutputFile = saveFileDialog1.FileName,
+                        };
+                        var api = new AspeakApi();
+
+                        await Task.Run(() =>
                         {
-                            MessageBox.Show(ex.Message);
-                            return;
-                        }
+                            try
+                            {
+                                api.RunExternalExe(ref process, "aspeak", select.ToString());
+                                MessageBox.Show("转换成功!");
+                            }
+                            catch (Exception ex)
+                            {
+                                MessageBox.Show(ex.Message);
+                                return;
+                            }
+
+                        });
 
                     });
                 });
