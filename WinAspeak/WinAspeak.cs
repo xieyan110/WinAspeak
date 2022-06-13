@@ -64,18 +64,21 @@ namespace WinAspeak
                     #region  RX
 
                     var oldMessage = string.Empty;
-                    
+
                     onMessage
                     .Subscribe(message =>
                     {
-                        if (oldMessage == message)
+                        if (oldMessage == message && File.Exists("output.wav"))
                         {
                             Task.Run(() =>
                             {
-                                SoundPlayer player = new SoundPlayer();
-                                player.SoundLocation = @"output.wav";
-                                player.Load(); //同步加载声音
-                                player.Play(); //启用新线程播放
+                                foreach (var i in Enumerable.Range(1, setInfo?.CallNumber ?? 1))
+                                {
+                                    SoundPlayer player = new SoundPlayer();
+                                    player.SoundLocation = @"output.wav";
+                                    player.Load(); //同步加载声音
+                                    player.Play(); //启用新线程播放
+                                }
                             });
                             return;
                         }
@@ -97,22 +100,26 @@ namespace WinAspeak
                                 OutputFile = "output.wav",
                             };
                             var api = new AspeakApi();
+
                             try
                             {
-                                Task.Run(() =>
+                                api.RunExternalExe(ref process, "aspeak", select.ToString());
+                                foreach (var i in Enumerable.Range(1, setInfo?.CallNumber ?? 1))
                                 {
-                                    api.RunExternalExe(ref process, "aspeak", select.ToString());
                                     SoundPlayer player = new SoundPlayer();
                                     player.SoundLocation = @"output.wav";
                                     player.Load(); //同步加载声音
                                     player.Play(); //启用新线程播放
-                                });
+                                }
+
                             }
                             catch (Exception ex)
                             {
+                                oldMessage = string.Empty;
                                 MessageBox.Show(ex.Message);
                                 return;
                             }
+
                         });
 
                     });
@@ -310,7 +317,7 @@ namespace WinAspeak
             Task.Run(async () =>
             {
                 if (connection != null)
-                    await connection.InvokeAsync("CallMessage", "请小明到4号房间检查就诊！");
+                    await connection.InvokeAsync("CallMessage", textBox1.Text);
             });
         }
     }
