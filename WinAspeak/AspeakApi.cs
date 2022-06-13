@@ -89,9 +89,10 @@ namespace WinAspeak
         }
 
 
-        public string RunExternalExe(string filename, string? arguments = null)
+        public string RunExternalExe(ref Process? process , string filename, string? arguments = null)
         {
-            var process = new Process();
+            process?.Kill();
+            process = new Process();
 
             process.StartInfo.FileName = filename;
             if (!string.IsNullOrEmpty(arguments))
@@ -118,12 +119,21 @@ namespace WinAspeak
             }
             catch (Exception e)
             {
+                if(e.Message == "No process is associated with this object.")
+                {
+                    return string.Empty;
+                }
                 throw new Exception("OS error while executing " + Format(filename, arguments) + ": " + e.Message, e);
             }
 
             if (process.ExitCode == 0)
             {
                 return stdOutput.ToString();
+            }
+            else if (string.IsNullOrEmpty(stdError) && process.ExitCode == -1)
+            {
+                // 退出成功
+                return "";
             }
             else
             {

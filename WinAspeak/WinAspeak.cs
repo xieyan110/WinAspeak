@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using WinAspeak.models;
 
 namespace WinAspeak
@@ -5,6 +6,7 @@ namespace WinAspeak
     public partial class WinAspeak : Form
     {
         List<Voices>? voices { get; set; }
+        public Process? process;
 
         public WinAspeak()
         {
@@ -80,25 +82,35 @@ namespace WinAspeak
                 MessageBox.Show("需要填写转换的文本!");
                 return;
             }
+            Task.Run(() =>
+            {
+                BeginInvoke(() =>
+                {
+                    var select = new SelectVoices()
+                    {
+                        ShortName = (string)comboBox2.SelectedValue,
+                        Style = (string)comboBox1.SelectedValue,
+                        Rate = trackBar2.Value,
+                        Pitch = trackBar1.Value,
+                        Text = textBox1.Text,
+                    };
+                    var api = new AspeakApi();
+                    try
+                    {
+                        Task.Run(() =>
+                        {
+                            api.RunExternalExe(ref process, "aspeak", select.ToString());
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(ex.Message);
+                        return;
+                    }
+                });
+            });
 
-            var select = new SelectVoices()
-            {
-                ShortName = (string)comboBox2.SelectedValue,
-                Style = (string)comboBox1.SelectedValue,
-                Rate = trackBar2.Value,
-                Pitch = trackBar1.Value,
-                Text = textBox1.Text,
-            };
-            var api = new AspeakApi();
-            try
-            {
-                api.RunExternalExe("aspeak", select.ToString());
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-                return;
-            }
+
             //MessageBox.Show("转换成功!");
         }
 
@@ -126,30 +138,52 @@ namespace WinAspeak
             saveFileDialog1.ShowDialog();
             if (saveFileDialog1.FileName != "")
             {
-                var select = new SelectVoices()
+                Task.Run(async () =>
                 {
-                    ShortName = (string)comboBox2.SelectedValue,
-                    Style = (string)comboBox1.SelectedValue,
-                    Rate = trackBar2.Value,
-                    Pitch = trackBar1.Value,
-                    Text = textBox1.Text,
-                    OutputFile = saveFileDialog1.FileName,
-                };
-                var api = new AspeakApi();
-                try
-                {
-                    api.RunExternalExe("aspeak", select.ToString());
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.Message);
-                    return;
-                }
-                MessageBox.Show("转换成功!");
+                    BeginInvoke(async () =>
+                    {
+                        var select = new SelectVoices()
+                        {
+                            ShortName = (string)comboBox2.SelectedValue,
+                            Style = (string)comboBox1.SelectedValue,
+                            Rate = trackBar2.Value,
+                            Pitch = trackBar1.Value,
+                            Text = textBox1.Text,
+                            OutputFile = saveFileDialog1.FileName,
+                        };
+                        var api = new AspeakApi();
+                        try
+                        {
+                            await Task.Run(() =>
+                            {
+                                api.RunExternalExe(ref process, "aspeak", select.ToString());
+                                MessageBox.Show("转换成功!");
+                            });
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show(ex.Message);
+                            return;
+                        }
+                        
+                    });
+
+                });
             }
 
         }
 
-
+        /// <summary>
+        /// 停止
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void button3_Click(object sender, EventArgs e)
+        {
+            Task.Run(() =>
+            {
+                process?.Kill();
+            });
+        }
     }
 }
